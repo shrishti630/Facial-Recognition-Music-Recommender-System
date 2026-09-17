@@ -18,3 +18,5 @@ __pycache__/
 
 # Streamlit runtime
 .streamlit/secrets.toml
+detected_state.tmp
+detected_state.json
