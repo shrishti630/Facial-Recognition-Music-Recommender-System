@@ -1,3 +1,5 @@
+import os
+import urllib.request
 import streamlit as st
 from streamlit_webrtc import webrtc_streamer, RTCConfiguration
 import av
@@ -10,20 +12,18 @@ try:
 except ImportError:
     from keras.models import load_model
 
-try:
-    import mediapipe.solutions.holistic as mp_holistic
-    import mediapipe.solutions.hands as mp_hands
-    import mediapipe.solutions.drawing_utils as mp_drawing
-except (AttributeError, ModuleNotFoundError):
-    try:
-        from mediapipe.python.solutions import holistic as mp_holistic
-        from mediapipe.python.solutions import hands as mp_hands
-        from mediapipe.python.solutions import drawing_utils as mp_drawing
-    except (AttributeError, ModuleNotFoundError):
-        import mediapipe as mp
-        mp_holistic = mp.solutions.holistic
-        mp_hands = mp.solutions.hands
-        mp_drawing = mp.solutions.drawing_utils
+import mediapipe as mp
+
+# Support both Legacy MediaPipe (Python <= 3.12) and Modern MediaPipe Tasks API (Python 3.13+)
+USE_LEGACY = hasattr(mp, "solutions") and hasattr(mp.solutions, "holistic")
+
+if USE_LEGACY:
+    mp_holistic = mp.solutions.holistic
+    mp_hands = mp.solutions.hands
+    mp_drawing = mp.solutions.drawing_utils
+else:
+    from mediapipe.tasks import python as mp_python
+    from mediapipe.tasks.python import vision as mp_vision
 
 col1, col2, col3 = st.columns([1, 6, 1])
 
@@ -41,9 +41,38 @@ def get_model():
 def get_labels():
     return np.load("labels.npy")
 
+def ensure_task_models():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    face_task = os.path.join(base_dir, "face_landmarker.task")
+    hand_task = os.path.join(base_dir, "hand_landmarker.task")
+
+    if not os.path.exists(face_task):
+        url = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task"
+        urllib.request.urlretrieve(url, face_task)
+    if not os.path.exists(hand_task):
+        url = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+        urllib.request.urlretrieve(url, hand_task)
+    return face_task, hand_task
+
+@st.cache_resource
+def get_detectors():
+    if USE_LEGACY:
+        hol = mp_holistic.Holistic()
+        return {"mode": "legacy", "hol": hol}
+    else:
+        face_path, hand_path = ensure_task_models()
+        base_face = mp_python.BaseOptions(model_asset_path=face_path)
+        opt_face = mp_vision.FaceLandmarkerOptions(base_options=base_face, num_faces=1)
+        face_det = mp_vision.FaceLandmarker.create_from_options(opt_face)
+
+        base_hand = mp_python.BaseOptions(model_asset_path=hand_path)
+        opt_hand = mp_vision.HandLandmarkerOptions(base_options=base_hand, num_hands=2)
+        hand_det = mp_vision.HandLandmarker.create_from_options(opt_hand)
+        return {"mode": "tasks", "face": face_det, "hand": hand_det}
+
 model = get_model()
 label = get_labels()
-hol = mp_holistic.Holistic()
+detectors = get_detectors()
 
 try:
     detected_emotion = str(np.load("detected_emotion.npy")[0])
@@ -54,50 +83,100 @@ class EmotionDetector:
     def recv(self, frame):
         frm = frame.to_ndarray(format="bgr24")
         frm = cv2.flip(frm, 1)
-
-        res = hol.process(cv2.cvtColor(frm, cv2.COLOR_BGR2RGB))
+        h, w, _ = frm.shape
 
         lst = []
 
-        # Only predict if face landmarks are detected to avoid shape mismatch crash
-        if res.face_landmarks:
-            for i in res.face_landmarks.landmark:
-                lst.append(i.x - res.face_landmarks.landmark[1].x)
-                lst.append(i.y - res.face_landmarks.landmark[1].y)
+        if detectors["mode"] == "legacy":
+            hol = detectors["hol"]
+            res = hol.process(cv2.cvtColor(frm, cv2.COLOR_BGR2RGB))
+            if res.face_landmarks:
+                for i in res.face_landmarks.landmark:
+                    lst.append(i.x - res.face_landmarks.landmark[1].x)
+                    lst.append(i.y - res.face_landmarks.landmark[1].y)
 
-            if res.left_hand_landmarks:
-                for i in res.left_hand_landmarks.landmark:
-                    lst.append(i.x - res.left_hand_landmarks.landmark[8].x)
-                    lst.append(i.y - res.left_hand_landmarks.landmark[8].y)
+                if res.left_hand_landmarks:
+                    for i in res.left_hand_landmarks.landmark:
+                        lst.append(i.x - res.left_hand_landmarks.landmark[8].x)
+                        lst.append(i.y - res.left_hand_landmarks.landmark[8].y)
+                else:
+                    for _ in range(42):
+                        lst.append(0.0)
+
+                if res.right_hand_landmarks:
+                    for i in res.right_hand_landmarks.landmark:
+                        lst.append(i.x - res.right_hand_landmarks.landmark[8].x)
+                        lst.append(i.y - res.right_hand_landmarks.landmark[8].y)
+                else:
+                    for _ in range(42):
+                        lst.append(0.0)
+
+                mp_drawing.draw_landmarks(frm, res.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
+                if res.left_hand_landmarks:
+                    mp_drawing.draw_landmarks(frm, res.left_hand_landmarks, mp_hands.HAND_CONNECTIONS)
+                if res.right_hand_landmarks:
+                    mp_drawing.draw_landmarks(frm, res.right_hand_landmarks, mp_hands.HAND_CONNECTIONS)
             else:
-                for i in range(42):
-                    lst.append(0.0)
+                cv2.putText(frm, "Face not detected", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        else:
+            face_det = detectors["face"]
+            hand_det = detectors["hand"]
 
-            if res.right_hand_landmarks:
-                for i in res.right_hand_landmarks.landmark:
-                    lst.append(i.x - res.right_hand_landmarks.landmark[8].x)
-                    lst.append(i.y - res.right_hand_landmarks.landmark[8].y)
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=cv2.cvtColor(frm, cv2.COLOR_BGR2RGB))
+            res_face = face_det.detect(mp_image)
+            res_hand = hand_det.detect(mp_image)
+
+            if res_face.face_landmarks:
+                face_lms = res_face.face_landmarks[0]
+                ref_face = face_lms[1]
+
+                for lm in face_lms[:468]:
+                    lst.append(lm.x - ref_face.x)
+                    lst.append(lm.y - ref_face.y)
+
+                left_hand = None
+                right_hand = None
+                if res_hand.hand_landmarks:
+                    for idx, handedness in enumerate(res_hand.handedness):
+                        lbl = handedness[0].category_name
+                        if lbl == "Left" and left_hand is None:
+                            left_hand = res_hand.hand_landmarks[idx]
+                        elif lbl == "Right" and right_hand is None:
+                            right_hand = res_hand.hand_landmarks[idx]
+
+                if left_hand:
+                    ref_l = left_hand[8]
+                    for lm in left_hand:
+                        lst.append(lm.x - ref_l.x)
+                        lst.append(lm.y - ref_l.y)
+                        cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 2, (0, 0, 255), -1)
+                else:
+                    for _ in range(42):
+                        lst.append(0.0)
+
+                if right_hand:
+                    ref_r = right_hand[8]
+                    for lm in right_hand:
+                        lst.append(lm.x - ref_r.x)
+                        lst.append(lm.y - ref_r.y)
+                        cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 2, (255, 0, 0), -1)
+                else:
+                    for _ in range(42):
+                        lst.append(0.0)
+
+                for lm in face_lms[:468:4]:
+                    cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 1, (0, 255, 0), -1)
             else:
-                for i in range(42):
-                    lst.append(0.0)
+                cv2.putText(frm, "Face not detected", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
+        if len(lst) == 1020:
             lst = np.array(lst).reshape(1, -1)
-
             try:
                 pred = label[np.argmax(model.predict(lst, verbose=0))]
                 cv2.putText(frm, pred, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 np.save("detected_emotion.npy", np.array([pred]))
             except Exception:
                 pass
-
-            mp_drawing.draw_landmarks(frm, res.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
-        else:
-            cv2.putText(frm, "Face not detected", (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
-        if res.left_hand_landmarks:
-            mp_drawing.draw_landmarks(frm, res.left_hand_landmarks, mp_hands.HAND_CONNECTIONS)
-        if res.right_hand_landmarks:
-            mp_drawing.draw_landmarks(frm, res.right_hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
         return av.VideoFrame.from_ndarray(frm, format="bgr24")
 
@@ -152,5 +231,3 @@ st.markdown(""" <style>
 header {visibility: hidden;}
 footer {visibility: hidden;}
 </style> """, unsafe_allow_html=True)
-
-
