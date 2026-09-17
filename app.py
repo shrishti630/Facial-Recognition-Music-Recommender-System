@@ -13,13 +13,13 @@ import webbrowser
 # PAGE CONFIGURATION
 # -------------------------------------------------------------
 st.set_page_config(
-    page_title="Sangeet — Music by Mood & Gesture",
+    page_title="Sangeet — 5 Core Emotions Music Recommender",
     page_icon="🎵",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Custom Styling
+# Custom Styling (Clean Light Theme)
 st.markdown("""
 <style>
     /* Global Base */
@@ -93,30 +93,26 @@ HAND_CONNECTIONS = [
 ]
 
 # -------------------------------------------------------------
-# 5 BASIC EMOTIONS CATALOGUE
+# THE 5 CORE EMOTIONS (STRICTLY CONSTRAINED)
 # -------------------------------------------------------------
-BASIC_5_EMOTIONS = ["happy", "sad", "neutral", "surprise", "angry"]
+FIVE_EMOTIONS = ["happy", "sad", "neutral", "surprise", "angry"]
 
-# 3 FEATURED HAND GESTURES
-FEATURED_GESTURES = ["rock", "Thumbsup", "hello"]
-
-MOOD_CATALOGUE = {
-    # The 5 Basic Core Emotions
+EMOTION_METADATA = {
     "happy": {
         "emoji": "☀️",
-        "title": "Bright & Joyful",
+        "title": "Happy & Joyful",
         "subtitle": "Radiating positive energy",
         "blurb": "Your expression is full of warmth and lightness. We're matching your state with uplifting melodies, feel-good rhythms, and cheerful pop anthems.",
         "color_bgr": (0, 200, 100),
         "hex": "#10B981",
-        "genres": ["Feel-Good Pop", "Sunny Acoustics", "Disco Groove", "Indie Upbeat"],
+        "genres": ["Feel-Good Pop", "Sunny Acoustics", "Disco Groove", "Upbeat Indie"],
         "tempo": "Brisk & lively • 115–128 BPM"
     },
     "sad": {
         "emoji": "🌧️",
-        "title": "Gentle & Soulful",
+        "title": "Gentle & Soulful (Sad)",
         "subtitle": "Taking a quiet, reflective moment",
-        "blurb": "Quiet moments have their own gentle beauty. Here are comforting acoustic tracks, soulful storytelling, and melodies that offer warm company.",
+        "blurb": "Quiet moments have their own gentle beauty. Here are comforting acoustic tracks, soulful storytelling, and slow melodies that offer warm company.",
         "color_bgr": (255, 160, 50),
         "hex": "#3B82F6",
         "genres": ["Mellow Acoustic", "Soulful Ballads", "Piano Solos", "Late Night Indie"],
@@ -124,7 +120,7 @@ MOOD_CATALOGUE = {
     },
     "neutral": {
         "emoji": "☕",
-        "title": "Calm & Centered",
+        "title": "Calm & Centered (Neutral)",
         "subtitle": "Easygoing focus and peaceful flow",
         "blurb": "You look relaxed and centered. Perfect for mellow lo-fi beats, gentle café acoustics, and smooth rhythms to accompany your workflow.",
         "color_bgr": (220, 120, 160),
@@ -134,9 +130,9 @@ MOOD_CATALOGUE = {
     },
     "surprise": {
         "emoji": "✨",
-        "title": "Curious & Excited",
+        "title": "Curious & Excited (Surprised)",
         "subtitle": "Sparked by something unexpected",
-        "blurb": "Engaged and wide awake! Here are vibrant synths, fresh electronic drops, and dynamic melodies that keep the energy flowing.",
+        "blurb": "Engaged and wide awake! Here are vibrant synths, fresh electronic drops, and dynamic melodies that keep the energy high.",
         "color_bgr": (0, 180, 250),
         "hex": "#F59E0B",
         "genres": ["Nu-Disco", "Electronic Pop", "Synthwave", "Future Beats"],
@@ -144,55 +140,35 @@ MOOD_CATALOGUE = {
     },
     "angry": {
         "emoji": "⚡",
-        "title": "Fiery & High Voltage",
+        "title": "Fiery & Intense (Angry)",
         "subtitle": "Channeling pure drive and intensity",
         "blurb": "Channel that fire into momentum. We're selecting punchy rock tracks, hard-hitting rhythms, and adrenaline-charged tracks.",
         "color_bgr": (50, 50, 240),
         "hex": "#EF4444",
         "genres": ["Alternative Rock", "Driving Beats", "Power Anthems", "Heavy Bass"],
         "tempo": "Driving & fast • 130–150 BPM"
-    },
+    }
+}
 
-    # The 3 Featured Hand Gestures
+# 3 Hand Gestures available to try on camera
+GESTURE_TEST_CATALOGUE = {
     "rock": {
         "emoji": "🤘",
-        "title": "Rock & Rebellion (Gesture)",
-        "subtitle": "Rock On gesture detected!",
-        "blurb": "You've thrown the rock sign! Get ready for roaring guitars, punchy drum breaks, and unmistakable rock-and-roll attitude.",
-        "color_bgr": (200, 50, 220),
-        "hex": "#EC4899",
-        "genres": ["Classic Rock", "Indie Anthems", "Garage Rock", "Heavy Metal"],
-        "tempo": "Punchy & driving • 120–140 BPM"
+        "name": "Rock Sign",
+        "desc": "Extend index & pinky fingers",
+        "vibe": "Rock & Alternative"
     },
     "Thumbsup": {
         "emoji": "👍",
-        "title": "Approved & Groovy (Gesture)",
-        "subtitle": "Thumbs Up gesture detected!",
-        "blurb": "Thumbs up! You're in a great groove. We're serving up crowd favorites, chart-topping hits, and songs you'll want to sing along with.",
-        "color_bgr": (240, 200, 0),
-        "hex": "#06B6D4",
-        "genres": ["Top Hits", "Sing-Along Jams", "Feel-Good R&B", "Modern Pop"],
-        "tempo": "Catchy & steady • 105–120 BPM"
+        "name": "Thumbs Up",
+        "desc": "Give a clear upward thumb",
+        "vibe": "Top Viral Hits & Pop"
     },
     "hello": {
         "emoji": "👋",
-        "title": "Warm & Welcoming (Gesture)",
-        "subtitle": "Wave Hello gesture detected!",
-        "blurb": "Hello there! Let's start on a bright note with inviting acoustic strings, sunny morning melodies, and upbeat coffeehouse tunes.",
-        "color_bgr": (180, 220, 0),
-        "hex": "#14B8A6",
-        "genres": ["Warm Acoustic", "Morning Folk", "Breezy Pop", "Indie Coffeehouse"],
-        "tempo": "Light & breezy • 90–110 BPM"
-    },
-    "No": {
-        "emoji": "🍃",
-        "title": "Quiet Peace",
-        "subtitle": "Unwinding and stepping back",
-        "blurb": "Taking a breath away from the noise. We're selecting soothing ambient sounds, peaceful instruments, and music to help you decompress.",
-        "color_bgr": (160, 160, 160),
-        "hex": "#64748B",
-        "genres": ["Minimalist Strings", "Deep Focus", "Tranquil Ambient", "Meditation"],
-        "tempo": "Slow & meditative • 50–70 BPM"
+        "name": "Wave Hello",
+        "desc": "Open palm towards camera",
+        "vibe": "Warm Morning Acoustics"
     }
 }
 
@@ -229,7 +205,7 @@ def get_detectors():
         face_det = mp_vision.FaceLandmarker.create_from_options(opt_face)
 
         base_hand = mp_python.BaseOptions(model_asset_path=hand_path)
-        opt_hand = mp_vision.HandLandmarkerOptions(base_options=base_hand, num_hands=2)
+        opt_hand = mp_vision.HandHandmarkerOptions = mp_vision.HandLandmarkerOptions(base_options=base_hand, num_hands=2)
         hand_det = mp_vision.HandLandmarker.create_from_options(opt_hand)
         return {"mode": "tasks", "face": face_det, "hand": hand_det}
 
@@ -238,7 +214,7 @@ label = get_labels()
 detectors = get_detectors()
 
 def read_telemetry():
-    """Reads latest prediction state safely from disk."""
+    """Reads latest mood prediction safely from disk."""
     try:
         if os.path.exists("detected_state.json"):
             with open("detected_state.json", "r") as f:
@@ -247,13 +223,13 @@ def read_telemetry():
         pass
     try:
         raw = str(np.load("detected_emotion.npy")[0])
-        return {"emotion": raw, "confidence": 0.0, "top3": [], "emotions_5": {}, "active_gesture": None}
+        return {"emotion": raw, "confidence": 0.0, "five_emotions": {}, "active_gesture": None}
     except Exception:
-        return {"emotion": "", "confidence": 0.0, "top3": [], "emotions_5": {}, "active_gesture": None}
+        return {"emotion": "", "confidence": 0.0, "five_emotions": {}, "active_gesture": None}
 
 
 # -------------------------------------------------------------
-# VIDEO PROCESSOR WITH MULTI-COLOR DOTS (Face vs Hands)
+# VIDEO PROCESSOR (Strictly 5 Emotions + Hand Tracking)
 # -------------------------------------------------------------
 class EmotionDetector:
     def recv(self, frame):
@@ -266,7 +242,7 @@ class EmotionDetector:
         left_hand_present = False
         right_hand_present = False
 
-        # Color definitions for Face vs Hands:
+        # Multi-color visual definitions:
         COLOR_FACE = (255, 220, 0)       # Cyan for Face mesh
         COLOR_LEFT_HAND = (220, 0, 255)   # Vibrant Magenta for Left Hand
         COLOR_RIGHT_HAND = (0, 230, 120)  # Spring Green for Right Hand
@@ -379,45 +355,56 @@ class EmotionDetector:
                 for lm in face_lms[:468:4]:
                     cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 1, COLOR_FACE, -1)
 
-        # Run Prediction
-        top_pred = ""
+        # ---------------------------------------------------------
+        # PREDICTION FILTERED STRICTLY TO THE 5 BASIC EMOTIONS
+        # ---------------------------------------------------------
+        top_emotion = ""
         confidence = 0.0
         mood_accent_color = (255, 255, 255)
         active_gesture = None
-        emotions_5 = {}
+        five_emotions = {}
 
         if len(lst) == 1020:
             lst_arr = np.array(lst).reshape(1, -1)
             try:
                 probs = model.predict(lst_arr, verbose=0)[0]
-                top_idx = int(np.argmax(probs))
-                top_pred = str(label[top_idx])
-                confidence = float(probs[top_idx]) * 100.0
-
                 label_list = list(label)
 
-                # Calculate probabilities for the 5 basic emotions
-                for emo in BASIC_5_EMOTIONS:
-                    if emo in label_list:
-                        idx = label_list.index(emo)
-                        emotions_5[emo] = round(float(probs[idx]) * 100, 1)
+                # 1. Filter probabilities strictly across the 5 basic emotions
+                five_indices = [label_list.index(e) for e in FIVE_EMOTIONS if e in label_list]
+                five_probs = np.array([probs[i] for i in five_indices])
+                prob_sum = np.sum(five_probs)
 
-                # Check if one of the 3 featured gestures is active (>35% confidence or top prediction)
-                for g in FEATURED_GESTURES:
+                if prob_sum > 0:
+                    five_norm = five_probs / prob_sum
+                else:
+                    five_norm = five_probs
+
+                # Store normalized percentages for the 5 basic emotions
+                for idx, emo in enumerate(FIVE_EMOTIONS):
+                    five_emotions[emo] = round(float(five_norm[idx]) * 100, 1)
+
+                # The detected emotion is STRICTLY the highest among the 5 emotions
+                best_five_idx = int(np.argmax(five_norm))
+                top_emotion = FIVE_EMOTIONS[best_five_idx]
+                confidence = float(five_norm[best_five_idx]) * 100.0
+
+                if top_emotion in EMOTION_METADATA:
+                    mood_accent_color = EMOTION_METADATA[top_emotion]["color_bgr"]
+
+                # 2. Check for optional hand gestures (rock, thumbs up, hello)
+                for g in ["rock", "Thumbsup", "hello"]:
                     if g in label_list:
-                        idx = label_list.index(g)
-                        if (top_pred == g) or (float(probs[idx]) > 0.35):
+                        g_idx = label_list.index(g)
+                        if probs[g_idx] > 0.35:
                             active_gesture = g
                             break
 
-                if top_pred in MOOD_CATALOGUE:
-                    mood_accent_color = MOOD_CATALOGUE[top_pred]["color_bgr"]
-
                 # Save state safely
                 payload = {
-                    "emotion": top_pred,
+                    "emotion": top_emotion,
                     "confidence": round(confidence, 1),
-                    "emotions_5": emotions_5,
+                    "five_emotions": five_emotions,
                     "active_gesture": active_gesture,
                     "face_detected": True,
                     "hands": {"left": left_hand_present, "right": right_hand_present},
@@ -426,27 +413,24 @@ class EmotionDetector:
                 with open("detected_state.tmp", "w") as f:
                     json.dump(payload, f)
                 os.replace("detected_state.tmp", "detected_state.json")
-                np.save("detected_emotion.npy", np.array([top_pred]))
+                np.save("detected_emotion.npy", np.array([top_emotion]))
             except Exception:
                 pass
 
         # ---------------------------------------------
-        # CAMERA HUD OVERLAY
+        # CAMERA HUD OVERLAY (STRICTLY 5 EMOTIONS)
         # ---------------------------------------------
         overlay = frm.copy()
         cv2.rectangle(overlay, (0, 0), (w, 80), (15, 20, 30), -1)
         cv2.rectangle(overlay, (0, h - 40), (w, h), (15, 20, 30), -1)
         cv2.addWeighted(overlay, 0.72, frm, 0.28, 0, frm)
 
-        if face_detected and top_pred:
-            is_gesture = top_pred in FEATURED_GESTURES
-            prefix = "GESTURE: " if is_gesture else "EMOTION: "
-            readable_title = MOOD_CATALOGUE.get(top_pred, {}).get("title", top_pred.title())
-
-            cv2.putText(frm, f"{prefix}{readable_title.upper()}", (20, 34), cv2.FONT_HERSHEY_DUPLEX, 0.80, mood_accent_color, 2)
+        if face_detected and top_emotion:
+            readable_title = EMOTION_METADATA.get(top_emotion, {}).get("title", top_emotion.title())
+            cv2.putText(frm, f"EMOTION: {readable_title.upper()}", (20, 34), cv2.FONT_HERSHEY_DUPLEX, 0.82, mood_accent_color, 2)
             cv2.putText(frm, f"Confidence: {confidence:.1f}%", (20, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (220, 225, 235), 1)
 
-            # Confidence bar on camera
+            # Confidence progress bar on camera
             bar_start = 220
             bar_len = max(50, w - bar_start - 30)
             fill_len = int(bar_len * (confidence / 100.0))
@@ -455,18 +439,21 @@ class EmotionDetector:
                 cv2.rectangle(frm, (bar_start, 50), (bar_start + fill_len, 64), mood_accent_color, -1)
         else:
             cv2.putText(frm, "CENTER YOUR FACE IN CAMERA", (20, 38), cv2.FONT_HERSHEY_DUPLEX, 0.75, (0, 140, 255), 2)
-            cv2.putText(frm, "Looking for facial landmarks...", (20, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.50, (180, 190, 205), 1)
+            cv2.putText(frm, "Detecting 5 basic emotions...", (20, 64), cv2.FONT_HERSHEY_SIMPLEX, 0.50, (180, 190, 205), 1)
 
-        # Bottom Bar Status
+        # Bottom Bar Status (Gesture awareness + hand tracking)
         face_str = "FACE: LOCKED" if face_detected else "FACE: NONE"
         face_col = (0, 220, 120) if face_detected else (0, 100, 255)
         cv2.putText(frm, face_str, (20, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.48, face_col, 1)
 
-        l_txt = "L-HAND: ACTIVE" if left_hand_present else "L-HAND: OFF"
-        cv2.putText(frm, l_txt, (180, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.48, COLOR_LEFT_HAND if left_hand_present else (150, 150, 160), 1)
-
-        r_txt = "R-HAND: ACTIVE" if right_hand_present else "R-HAND: OFF"
-        cv2.putText(frm, r_txt, (350, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.48, COLOR_RIGHT_HAND if right_hand_present else (150, 150, 160), 1)
+        if active_gesture and active_gesture in GESTURE_TEST_CATALOGUE:
+            g_meta = GESTURE_TEST_CATALOGUE[active_gesture]
+            gesture_str = f"GESTURE: {g_meta['name'].upper()} DETECTED"
+            cv2.putText(frm, gesture_str, (180, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (0, 240, 255), 1)
+        else:
+            l_txt = "L-HAND: ACTIVE" if left_hand_present else "L-HAND: OFF"
+            r_txt = "R-HAND: ACTIVE" if right_hand_present else "R-HAND: OFF"
+            cv2.putText(frm, f"{l_txt} | {r_txt}", (180, h - 14), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (200, 205, 215), 1)
 
         return av.VideoFrame.from_ndarray(frm, format="bgr24")
 
@@ -482,13 +469,15 @@ st.markdown("""
                 🎵 Sangeet AI Studio
             </h1>
             <p style="margin: 6px 0 0 0; color: #64748B; font-size: 1.05rem;">
-                Music that understands how you feel. Express a mood or try hand gestures to curate your soundtrack.
+                Express your natural mood across the 5 core emotions to curate your soundtrack.
             </p>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <span class="mood-pill">✨ 5 Basic Emotions</span>
-            <span class="mood-pill">🖐️ 3 Interactive Gestures</span>
-            <span class="mood-pill">🎧 Instant Recommendations</span>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span class="mood-pill">☀️ Happy</span>
+            <span class="mood-pill">🌧️ Sad</span>
+            <span class="mood-pill">☕ Neutral</span>
+            <span class="mood-pill">✨ Surprise</span>
+            <span class="mood-pill">⚡ Angry</span>
         </div>
     </div>
 </div>
@@ -498,18 +487,14 @@ st.markdown("""
 telemetry = read_telemetry()
 current_emotion = telemetry.get("emotion", "")
 current_conf = telemetry.get("confidence", 0.0)
-emotions_5 = telemetry.get("emotions_5", {})
+five_emotions = telemetry.get("five_emotions", {})
 active_gesture = telemetry.get("active_gesture", None)
 
-mood_info = MOOD_CATALOGUE.get(current_emotion, {
-    "emoji": "🎧",
-    "title": "Awaiting Your Expression",
-    "subtitle": "Look into the camera or try a gesture",
-    "blurb": "Allow camera access and face the camera. Smile, relax, or try the rock 🤘 and thumbs up 👍 gestures below to get instant music matches!",
-    "hex": "#EA580C",
-    "genres": ["Feel-Good Pop", "Acoustic", "Lo-Fi Chill", "Classic Rock"],
-    "tempo": "Ready to tune in"
-})
+# Default to Neutral or detected emotion
+if current_emotion not in FIVE_EMOTIONS:
+    current_emotion = "neutral"
+
+mood_info = EMOTION_METADATA.get(current_emotion, EMOTION_METADATA["neutral"])
 
 
 # -------------------------------------------------------------
@@ -517,12 +502,12 @@ mood_info = MOOD_CATALOGUE.get(current_emotion, {
 # -------------------------------------------------------------
 col_left, col_right = st.columns([1.1, 1], gap="large")
 
-# LEFT COLUMN: Camera Feed, 3 Hand Gestures, & 5 Basic Emotions
+# LEFT COLUMN: Live Camera, 3 Gestures to Try, & 5 Basic Emotions Breakdown
 with col_left:
     # Camera Mirror Card
     with st.container(border=True):
         st.subheader("📹 Live Camera Mirror")
-        st.caption("Detecting facial expressions and hand gestures in real time.")
+        st.caption("Detecting facial expressions and hands in real time.")
 
         RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 
@@ -533,57 +518,53 @@ with col_left:
             video_processor_factory=EmotionDetector
         )
 
-        st.caption("Landmark Colors: **Cyan** = Face Mesh | **Magenta** = Left Hand | **Green** = Right Hand")
+        st.caption("Tracking Colors: **Cyan** = Face Mesh | **Magenta** = Left Hand | **Green** = Right Hand")
 
-    # INTERACTIVE 3 HAND GESTURES CARD (Try them out!)
+    # INTERACTIVE 3 HAND GESTURES TO TRY (Live Feedback)
     with st.container(border=True):
         st.subheader("🖐️ Try These 3 Hand Gestures")
-        st.caption("Show these hand gestures directly to the camera and watch the system recognize them!")
+        st.caption("Show these hand gestures to the camera and watch the system recognize them live:")
 
-        g_col1, g_col2, g_col3 = st.columns(3)
+        g1, g2, g3 = st.columns(3)
 
-        with g_col1:
-            is_rock = (active_gesture == "rock") or (current_emotion == "rock")
-            border_rock = "🟢 ACTIVE" if is_rock else "Ready"
-            st.markdown(f"### 🤘 Rock Sign")
-            st.caption("**How to do it:** Extend index & pinky fingers")
-            st.caption("Curates: **Rock & Heavy Anthems**")
-            if is_rock:
-                st.success("🟢 DETECTED!")
+        with g1:
+            st.markdown("### 🤘 Rock Sign")
+            st.caption("**How to try:** Extend index & pinky")
+            st.caption("Vibe: **Classic Rock**")
+            if active_gesture == "rock":
+                st.success("🟢 DETECTED LIVE!")
             else:
                 st.info("Try this gesture")
 
-        with g_col2:
-            is_thumb = (active_gesture == "Thumbsup") or (current_emotion == "Thumbsup")
-            st.markdown(f"### 👍 Thumbs Up")
-            st.caption("**How to do it:** Clear upward thumb")
-            st.caption("Curates: **Top Hits & Groovy Pop**")
-            if is_thumb:
-                st.success("🟢 DETECTED!")
+        with g2:
+            st.markdown("### 👍 Thumbs Up")
+            st.caption("**How to try:** Upward thumb to camera")
+            st.caption("Vibe: **Top Viral Hits**")
+            if active_gesture == "Thumbsup":
+                st.success("🟢 DETECTED LIVE!")
             else:
                 st.info("Try this gesture")
 
-        with g_col3:
-            is_hello = (active_gesture == "hello") or (current_emotion == "hello")
-            st.markdown(f"### 👋 Wave Hello")
-            st.caption("**How to do it:** Open palm towards camera")
-            st.caption("Curates: **Warm Morning Acoustics**")
-            if is_hello:
-                st.success("🟢 DETECTED!")
+        with g3:
+            st.markdown("### 👋 Wave Hello")
+            st.caption("**How to try:** Open palm to camera")
+            st.caption("Vibe: **Warm Acoustics**")
+            if active_gesture == "hello":
+                st.success("🟢 DETECTED LIVE!")
             else:
                 st.info("Try this gesture")
 
     # 5 BASIC EMOTIONS BREAKDOWN CARD
     with st.container(border=True):
-        st.subheader("📊 5 Basic Emotions Breakdown")
-        st.caption("Real-time balance across the 5 primary emotional expressions:")
+        st.subheader("📊 5 Basic Emotions Balance")
+        st.caption("Real-time probability breakdown strictly across the 5 core emotions:")
 
-        for emo_key in BASIC_5_EMOTIONS:
-            emo_pct = emotions_5.get(emo_key, 0.0)
-            meta = MOOD_CATALOGUE[emo_key]
+        for emo_key in FIVE_EMOTIONS:
+            emo_pct = five_emotions.get(emo_key, 0.0)
+            meta = EMOTION_METADATA[emo_key]
             c_lbl, c_bar, c_val = st.columns([2.8, 4.2, 1])
             with c_lbl:
-                st.write(f"{meta['emoji']} **{meta['title'].split('&')[0].strip()}**")
+                st.write(f"{meta['emoji']} **{meta['title'].split('(')[0].strip()}**")
             with c_bar:
                 st.progress(min(1.0, max(0.0, emo_pct / 100.0)))
             with c_val:
@@ -591,15 +572,13 @@ with col_left:
 
 # RIGHT COLUMN: Mood Hero & Music Recommendation Hub
 with col_right:
-    # Detected Mood / Gesture Hero Card
+    # Detected Emotion Card (Strictly one of the 5 core emotions)
     with st.container(border=True):
         col_m_emoji, col_m_text = st.columns([1, 4])
         with col_m_emoji:
             st.markdown(f"<div style='font-size: 3.8rem; text-align: center; padding-top: 5px;'>{mood_info['emoji']}</div>", unsafe_allow_html=True)
         with col_m_text:
-            is_gesture = current_emotion in FEATURED_GESTURES
-            type_label = "DETECTED HAND GESTURE" if is_gesture else "DETECTED MOOD"
-            st.caption(f"{type_label} • {current_conf:.0f}% CONFIDENCE")
+            st.caption(f"DETECTED EMOTION • {current_conf:.0f}% CONFIDENCE")
             st.subheader(mood_info["title"])
             st.markdown(f"<span style='color: {mood_info['hex']}; font-weight: 600;'>{mood_info['subtitle']}</span>", unsafe_allow_html=True)
 
@@ -632,30 +611,27 @@ with col_right:
     with st.container(border=True):
         st.subheader("🚀 Curated Recommendations")
 
-        keyword = current_emotion if current_emotion else "feel good"
-        search_query = f"{lang} {keyword} songs {artist}".strip()
+        # YouTube and Spotify queries using the strict 5 emotions
+        search_query = f"{lang} {current_emotion} songs {artist}".strip()
         youtube_url = f"https://www.youtube.com/results?search_query={search_query.replace(' ', '+')}"
         spotify_url = f"https://open.spotify.com/search/{search_query.replace(' ', '%20')}"
 
         btn_c1, btn_c2 = st.columns([2, 1])
         with btn_c1:
-            get_rec_clicked = st.button("🎵 Curate Songs for My Mood", use_container_width=True, type="primary")
+            get_rec_clicked = st.button("🎵 Curate Songs for My Emotion", use_container_width=True, type="primary")
         with btn_c2:
-            if st.button("Reset Mood 🔄", use_container_width=True):
-                np.save("detected_emotion.npy", np.array([""]))
+            if st.button("Reset Emotion 🔄", use_container_width=True):
+                np.save("detected_emotion.npy", np.array(["neutral"]))
                 if os.path.exists("detected_state.json"):
                     os.remove("detected_state.json")
                 st.rerun()
 
         if get_rec_clicked:
-            if not current_emotion:
-                st.warning("⚠️ Look into the camera or try a hand gesture to capture your mood first!")
-            else:
-                try:
-                    webbrowser.open(youtube_url)
-                except Exception:
-                    pass
-                st.success(f"🎉 Playlist curated for **{mood_info['title']}**! Choose where to listen:")
+            try:
+                webbrowser.open(youtube_url)
+            except Exception:
+                pass
+            st.success(f"🎉 Playlist curated for **{mood_info['title']}**! Choose where to listen:")
 
         st.markdown("<div style='margin-top: 10px;'>", unsafe_allow_html=True)
         link_col1, link_col2 = st.columns(2)
@@ -668,7 +644,7 @@ with col_right:
 st.write("---")
 st.markdown(
     "<div style='text-align: center; color: #94A3B8; font-size: 0.85rem; padding: 10px 0;'>"
-    "Sangeet AI Studio • 5 Basic Emotions & Hand Gesture Recognition Powered by MediaPipe & TensorFlow"
+    "Sangeet AI Studio • 5 Core Emotions (Angry, Happy, Sad, Surprised, Neutral) Powered by MediaPipe & TensorFlow"
     "</div>",
     unsafe_allow_html=True
 )
