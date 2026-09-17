@@ -1,0 +1,20 @@
+# Python virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Streamlit runtime
+.streamlit/secrets.toml
