@@ -9,68 +9,104 @@ import cv2
 import numpy as np
 import webbrowser
 
-# Page Configuration
+# -------------------------------------------------------------
+# PAGE CONFIGURATION (WARM EDITORIAL LIGHT THEME)
+# -------------------------------------------------------------
 st.set_page_config(
-    page_title="Sangeet - AI Music Recommender",
+    page_title="Sangeet — Music by Mood",
     page_icon="🎵",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Custom Styling
+# -------------------------------------------------------------
+# HUMANIZED EDITORIAL LIGHT STYLING
+# -------------------------------------------------------------
 st.markdown("""
 <style>
-    /* Global styles */
+    /* Global Base */
     .stApp {
-        background-color: #0A0D14;
-        color: #F1F5F9;
+        background-color: #FAF8F5;
+        color: #1E293B;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Header hero */
-    .hero-container {
-        background: linear-gradient(135deg, rgba(30, 27, 75, 0.7) 0%, rgba(15, 23, 42, 0.8) 50%, rgba(10, 13, 20, 0.9) 100%);
-        border: 1px solid rgba(139, 92, 246, 0.25);
-        border-radius: 20px;
-        padding: 24px 30px;
-        margin-bottom: 25px;
-        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(12px);
+    /* Editorial Header */
+    .editorial-header {
+        padding: 24px 0 16px 0;
+        border-bottom: 1px solid #EAE6DF;
+        margin-bottom: 30px;
+    }
+    .editorial-title {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, serif;
+        font-size: 2.2rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: #0F172A;
+        margin: 0;
+    }
+    .editorial-sub {
+        font-size: 1.05rem;
+        color: #64748B;
+        margin-top: 6px;
+        line-height: 1.5;
     }
     
-    /* Card containers */
-    .glass-card {
-        background: rgba(19, 23, 34, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 18px;
-        padding: 20px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-    }
-    
-    /* Mood Card with dynamic neon glow */
-    .mood-card {
-        background: rgba(19, 23, 34, 0.85);
-        border-radius: 18px;
+    /* Clean Cards */
+    .clean-card {
+        background: #FFFFFF;
+        border: 1px solid #EAE6DF;
+        border-radius: 16px;
         padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        transition: all 0.3s ease;
+        margin-bottom: 22px;
+        box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.03), 0 2px 6px -2px rgba(0, 0, 0, 0.02);
     }
     
-    /* Tag Pills */
-    .mood-tag {
+    .card-label {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94A3B8;
+        margin-bottom: 12px;
+    }
+    
+    /* Mood Card */
+    .mood-hero-card {
+        background: #FFFFFF;
+        border-radius: 16px;
+        padding: 26px;
+        margin-bottom: 22px;
+        border: 1.5px solid #E2E8F0;
+        box-shadow: 0 6px 24px -4px rgba(0, 0, 0, 0.04);
+    }
+    
+    /* Genre Pills */
+    .genre-chip {
         display: inline-block;
-        background: rgba(139, 92, 246, 0.15);
-        color: #C4B5FD;
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        border-radius: 20px;
-        padding: 4px 12px;
+        background: #F8FAFC;
+        color: #334155;
+        border: 1px solid #E2E8F0;
+        border-radius: 100px;
+        padding: 5px 14px;
         font-size: 0.82rem;
         font-weight: 500;
-        margin: 3px;
+        margin: 4px 6px 4px 0;
     }
     
-    /* Hide default Streamlit chrome */
+    /* Progress styling */
+    .stProgress > div > div > div > div {
+        background-color: #EA580C;
+    }
+    
+    /* Clean inputs & buttons */
+    .stButton > button {
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    
+    /* Hide Streamlit default headers */
     header {visibility: hidden;}
     footer {visibility: hidden;}
     #MainMenu {visibility: hidden;}
@@ -95,79 +131,108 @@ else:
     from mediapipe.tasks import python as mp_python
     from mediapipe.tasks.python import vision as mp_vision
 
-# Mood metadata mapping
-MOOD_MAP = {
+# -------------------------------------------------------------
+# HUMANIZED MOOD CATALOGUE
+# -------------------------------------------------------------
+MOOD_CATALOGUE = {
     "happy": {
-        "emoji": "😊",
-        "title": "Joyful & Energetic",
-        "color": (0, 220, 120),
-        "hex": "#10B981",
-        "vibe": "Upbeat feel-good melodies, cheerful pop anthems, and dance beats",
-        "tags": ["#HappyVibes", "#FeelGood", "#DancePop", "#SunnyHits"]
+        "emoji": "☀️",
+        "title": "Bright & Joyful",
+        "subtitle": "Radiating positive energy",
+        "blurb": "Your expression is full of warmth and lightness. We're matching your state with uplifting melodies, feel-good rhythms, and cheerful anthems.",
+        "badge_bg": "#FEF3C7",
+        "badge_color": "#92400E",
+        "accent": "#D97706",
+        "genres": ["Feel-Good Pop", "Sunny Acoustics", "Disco Groove", "Indie Upbeat"],
+        "tempo": "Brisk & lively • 115–128 BPM"
     },
     "sad": {
         "emoji": "🌧️",
-        "title": "Soulful & Melancholic",
-        "color": (255, 160, 60),
-        "hex": "#3B82F6",
-        "vibe": "Deep acoustic ballads, gentle piano melodies, and reflective lyrics",
-        "tags": ["#Soulful", "#Acoustic", "#DeepEmotions", "#SlowBallad"]
+        "title": "Gentle & Reflective",
+        "subtitle": "Taking a quiet, soulful moment",
+        "blurb": "Quiet moments have their own beauty. Here are comforting acoustic tracks, soulful storytelling, and melodies that offer gentle, warm company.",
+        "badge_bg": "#DBEAFE",
+        "badge_color": "#1E40AF",
+        "accent": "#2563EB",
+        "genres": ["Mellow Acoustic", "Soulful Ballads", "Piano Solos", "Late Night Indie"],
+        "tempo": "Slow & peaceful • 65–85 BPM"
     },
     "angry": {
-        "emoji": "🔥",
-        "title": "Intense & High Voltage",
-        "color": (60, 60, 255),
-        "hex": "#EF4444",
-        "vibe": "Hard rock riffs, adrenaline-pumping beats, and heavy energy",
-        "tags": ["#HardRock", "#WorkoutPump", "#Adrenaline", "#HeavyBass"]
+        "emoji": "⚡",
+        "title": "Fiery & High Voltage",
+        "subtitle": "Channeling pure drive and intensity",
+        "blurb": "Channel that fire into momentum. We're selecting punchy rock tracks, hard-hitting rhythms, and adrenaline-charged tracks.",
+        "badge_bg": "#FEE2E2",
+        "badge_color": "#991B1B",
+        "accent": "#DC2626",
+        "genres": ["Alternative Rock", "Driving Beats", "Power Anthems", "Heavy Bass"],
+        "tempo": "Driving & fast • 130–150 BPM"
     },
     "surprise": {
-        "emoji": "⚡",
-        "title": "Excited & Wonder",
-        "color": (0, 180, 255),
-        "hex": "#F59E0B",
-        "vibe": "Electric synth drops, progressive EDM, and catchy build-ups",
-        "tags": ["#Synthwave", "#EDMDrops", "#PartyBeats", "#FutureBass"]
+        "emoji": "✨",
+        "title": "Curious & Excited",
+        "subtitle": "Sparked by something unexpected",
+        "blurb": "Engaged and wide awake! Here are vibrant synths, fresh electronic drops, and dynamic melodies that keep the energy flowing.",
+        "badge_bg": "#FFEDD5",
+        "badge_color": "#9A3412",
+        "accent": "#EA580C",
+        "genres": ["Nu-Disco", "Electronic Pop", "Synthwave", "Future Beats"],
+        "tempo": "Bouncy & dynamic • 120–135 BPM"
     },
     "neutral": {
         "emoji": "☕",
         "title": "Calm & Centered",
-        "color": (230, 130, 180),
-        "hex": "#8B5CF6",
-        "vibe": "Chilled Lo-Fi beats, soft jazz café acoustics, and study rhythms",
-        "tags": ["#LoFiChill", "#Coffeehouse", "#StudyBeats", "#SmoothJazz"]
+        "subtitle": "Easygoing focus and peaceful flow",
+        "blurb": "You look relaxed and centered. Perfect for mellow lo-fi beats, gentle café acoustics, and smooth rhythms to accompany your workflow.",
+        "badge_bg": "#F3E8FF",
+        "badge_color": "#6B21A8",
+        "accent": "#7C3AED",
+        "genres": ["Lo-Fi Chill", "Quiet Jazz", "Study Beats", "Ambient Piano"],
+        "tempo": "Easy & moderate • 75–95 BPM"
     },
     "rock": {
-        "emoji": "🤘",
-        "title": "Rock & Rebellion",
-        "color": (200, 50, 220),
-        "hex": "#EC4899",
-        "vibe": "Classic rock anthems, distorted guitars, and alternative grooves",
-        "tags": ["#ClassicRock", "#Alternative", "#GuitarSolo", "#IndieGroove"]
+        "emoji": "🎸",
+        "title": "Playful & Rebellious",
+        "subtitle": "Ready for loud guitars and good times",
+        "blurb": "You've thrown the rock sign! Get ready for roaring guitars, punchy drum breaks, and unmistakable rock-and-roll attitude.",
+        "badge_bg": "#FCE7F3",
+        "badge_color": "#9D174D",
+        "accent": "#DB2777",
+        "genres": ["Classic Rock", "Indie Anthems", "Garage Rock", "Grunge"],
+        "tempo": "Punchy & driving • 120–140 BPM"
     },
     "Thumbsup": {
         "emoji": "👍",
-        "title": "Approved & Groovy",
-        "color": (255, 200, 0),
-        "hex": "#06B6D4",
-        "vibe": "Top trending viral hits, irresistible groove, and radio favorites",
-        "tags": ["#TopHits", "#ViralJam", "#GroovyVibes", "#TrendingNow"]
+        "title": "Good Vibes Approved",
+        "subtitle": "Feeling great and ready to groove",
+        "blurb": "Thumbs up! You're in a great groove. We're serving up crowd favorites, chart-topping hits, and songs you'll want to sing along with.",
+        "badge_bg": "#CCFBF1",
+        "badge_color": "#115E59",
+        "accent": "#0D9488",
+        "genres": ["Top Hits", "Sing-Along Jams", "Feel-Good R&B", "Modern Pop"],
+        "tempo": "Catchy & steady • 105–120 BPM"
     },
     "hello": {
         "emoji": "👋",
         "title": "Warm & Welcoming",
-        "color": (160, 220, 0),
-        "hex": "#14B8A6",
-        "vibe": "Bright acoustic guitars, sunny morning tunes, and uplifting indie folk",
-        "tags": ["#MorningAcoustic", "#WarmVibes", "#IndieFolk", "#SunnyDays"]
+        "subtitle": "Starting the session off right",
+        "blurb": "Hello there! Let's start on a bright note with inviting acoustic strings, sunny morning melodies, and upbeat coffeehouse tunes.",
+        "badge_bg": "#E0F2FE",
+        "badge_color": "#075985",
+        "accent": "#0284C7",
+        "genres": ["Warm Acoustic", "Morning Folk", "Breezy Pop", "Indie Coffeehouse"],
+        "tempo": "Light & breezy • 90–110 BPM"
     },
     "No": {
-        "emoji": "🛑",
-        "title": "Peaceful & Tranquil",
-        "color": (180, 180, 180),
-        "hex": "#6B7280",
-        "vibe": "Deep meditation music, ambient soundscapes, and calming piano",
-        "tags": ["#Tranquil", "#DeepFocus", "#AmbientSound", "#InnerPeace"]
+        "emoji": "🍃",
+        "title": "Quiet Peace",
+        "subtitle": "Unwinding and stepping back",
+        "blurb": "Taking a breath away from the noise. We're selecting soothing ambient sounds, peaceful instruments, and music to help you decompress.",
+        "badge_bg": "#F1F5F9",
+        "badge_color": "#334155",
+        "accent": "#475569",
+        "genres": ["Minimalist Strings", "Deep Focus", "Tranquil Ambient", "Meditation"],
+        "tempo": "Slow & meditative • 50–70 BPM"
     }
 }
 
@@ -213,12 +278,11 @@ label = get_labels()
 detectors = get_detectors()
 
 def read_telemetry():
-    """Reads latest prediction state safely."""
+    """Reads latest mood prediction safely from disk."""
     try:
         if os.path.exists("detected_state.json"):
             with open("detected_state.json", "r") as f:
-                data = json.load(f)
-                return data
+                return json.load(f)
     except Exception:
         pass
     try:
@@ -227,6 +291,10 @@ def read_telemetry():
     except Exception:
         return {"emotion": "", "confidence": 0.0, "top3": []}
 
+
+# -------------------------------------------------------------
+# VIDEO PROCESSOR (MINIMAL, ELEGANT HUMAN OVERLAY)
+# -------------------------------------------------------------
 class EmotionDetector:
     def recv(self, frame):
         frm = frame.to_ndarray(format="bgr24")
@@ -264,12 +332,6 @@ class EmotionDetector:
                 else:
                     for _ in range(42):
                         lst.append(0.0)
-
-                mp_drawing.draw_landmarks(frm, res.face_landmarks, mp_holistic.FACEMESH_TESSELATION)
-                if res.left_hand_landmarks:
-                    mp_drawing.draw_landmarks(frm, res.left_hand_landmarks, mp_hands.HAND_CONNECTIONS)
-                if res.right_hand_landmarks:
-                    mp_drawing.draw_landmarks(frm, res.right_hand_landmarks, mp_hands.HAND_CONNECTIONS)
         else:
             face_det = detectors["face"]
             hand_det = detectors["hand"]
@@ -303,7 +365,7 @@ class EmotionDetector:
                     for lm in left_hand:
                         lst.append(lm.x - ref_l.x)
                         lst.append(lm.y - ref_l.y)
-                        cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 3, (255, 0, 150), -1)
+                        cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 2, (180, 140, 240), -1)
                 else:
                     for _ in range(42):
                         lst.append(0.0)
@@ -314,19 +376,18 @@ class EmotionDetector:
                     for lm in right_hand:
                         lst.append(lm.x - ref_r.x)
                         lst.append(lm.y - ref_r.y)
-                        cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 3, (0, 200, 255), -1)
+                        cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 2, (140, 200, 240), -1)
                 else:
                     for _ in range(42):
                         lst.append(0.0)
 
-                # High-tech subtle cyan face points
-                for lm in face_lms[:468:3]:
-                    cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 1, (240, 200, 0), -1)
+                # Very subtle, refined facial landmark dots (not harsh wireframes)
+                for lm in face_lms[:468:6]:
+                    cv2.circle(frm, (int(lm.x * w), int(lm.y * h)), 1, (255, 255, 255), -1)
 
-        # Predict when all 1,020 landmarks are available
-        top_pred = "Scanning..."
+        # Run Prediction
+        top_pred = ""
         confidence = 0.0
-        top_color = (200, 200, 200)
 
         if len(lst) == 1020:
             lst_arr = np.array(lst).reshape(1, -1)
@@ -339,11 +400,7 @@ class EmotionDetector:
                 top_indices = np.argsort(probs)[::-1]
                 top3_info = [(str(label[i]), round(float(probs[i]) * 100, 1)) for i in top_indices[:3]]
 
-                # Fetch color from mood map
-                if top_pred in MOOD_MAP:
-                    top_color = MOOD_MAP[top_pred]["color"]
-
-                # Save telemetry safely to JSON
+                # Save state safely
                 payload = {
                     "emotion": top_pred,
                     "confidence": round(confidence, 1),
@@ -355,214 +412,218 @@ class EmotionDetector:
                 with open("detected_state.tmp", "w") as f:
                     json.dump(payload, f)
                 os.replace("detected_state.tmp", "detected_state.json")
-
-                # Also save numpy for backward compatibility
                 np.save("detected_emotion.npy", np.array([top_pred]))
             except Exception:
                 pass
 
-        # -----------------------------
-        # DRAW HEADS-UP DISPLAY (HUD)
-        # -----------------------------
+        # ---------------------------------------------
+        # MINIMAL, HUMANIZED FLOATING BANNER (NOT A SCI-FI HUD)
+        # ---------------------------------------------
         overlay = frm.copy()
-        cv2.rectangle(overlay, (0, 0), (w, 85), (10, 13, 20), -1)
-        cv2.rectangle(overlay, (0, h - 45), (w, h), (10, 13, 20), -1)
-        cv2.addWeighted(overlay, 0.75, frm, 0.25, 0, frm)
+        # Soft dark charcoal floating pill at top
+        cv2.rectangle(overlay, (20, 18), (w - 20, 72), (24, 28, 38), -1)
+        cv2.addWeighted(overlay, 0.70, frm, 0.30, 0, frm)
 
-        if face_detected:
-            # Top HUD: Emotion Title & Confidence Bar
-            cv2.putText(frm, f"MOOD: {top_pred.upper()}", (20, 36), cv2.FONT_HERSHEY_DUPLEX, 0.9, top_color, 2)
-            cv2.putText(frm, f"CONFIDENCE: {confidence:.1f}%", (20, 68), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (220, 225, 235), 1)
+        if face_detected and top_pred:
+            readable_title = MOOD_CATALOGUE.get(top_pred, {}).get("title", top_pred.title())
+            cv2.putText(frm, f"Current feeling: {readable_title}", (36, 46), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
+            cv2.putText(frm, f"{confidence:.0f}% confidence", (w - 180, 46), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (200, 210, 225), 1)
 
-            # Interactive confidence meter bar on frame
-            bar_start_x = 240
-            bar_max_w = max(50, w - bar_start_x - 30)
-            fill_w = int(bar_max_w * (confidence / 100.0))
-            cv2.rectangle(frm, (bar_start_x, 52), (bar_start_x + bar_max_w, 68), (30, 35, 48), -1)
-            if fill_w > 0:
-                cv2.rectangle(frm, (bar_start_x, 52), (bar_start_x + fill_w, 68), top_color, -1)
+            # Clean thin indicator line at bottom of pill
+            bar_w = int((w - 72) * (confidence / 100.0))
+            cv2.line(frm, (36, 62), (36 + bar_w, 62), (234, 88, 12), 2)
         else:
-            cv2.putText(frm, "LOOK DIRECTLY AT CAMERA", (20, 38), cv2.FONT_HERSHEY_DUPLEX, 0.8, (0, 120, 255), 2)
-            cv2.putText(frm, "Face Tracking: Searching for face...", (20, 68), cv2.FONT_HERSHEY_SIMPLEX, 0.52, (180, 185, 195), 1)
-
-        # Bottom Telemetry HUD
-        face_status_str = "FACE: LOCKED" if face_detected else "FACE: LOST"
-        face_status_col = (0, 220, 120) if face_detected else (0, 100, 255)
-        cv2.putText(frm, face_status_str, (20, h - 16), cv2.FONT_HERSHEY_SIMPLEX, 0.48, face_status_col, 1)
-
-        hand_info = f"HANDS: L={'ON' if left_hand_present else 'OFF'} | R={'ON' if right_hand_present else 'OFF'}"
-        cv2.putText(frm, hand_info, (170, h - 16), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (200, 205, 215), 1)
-
-        cv2.putText(frm, "SANGEET AI HUD", (w - 160, h - 16), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (160, 120, 255), 1)
+            cv2.putText(frm, "Center your face in the camera view...", (36, 48), cv2.FONT_HERSHEY_SIMPLEX, 0.60, (220, 225, 235), 1)
 
         return av.VideoFrame.from_ndarray(frm, format="bgr24")
 
 
 # -------------------------------------------------------------
-# HERO BANNER
+# EDITORIAL HEADER (Humanized, natural tone)
 # -------------------------------------------------------------
 st.markdown("""
-<div class="hero-container">
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+<div class="editorial-header">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
         <div>
-            <h1 style="margin: 0; font-size: 2.3rem; font-weight: 800; background: linear-gradient(90deg, #8B5CF6, #38BDF8, #34D399); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                🎵 Sangeet AI Studio
-            </h1>
-            <p style="margin: 8px 0 0 0; color: #94A3B8; font-size: 1.05rem;">
-                Real-time Facial Emotion & Gesture Recognition paired with instant Music Recommendations.
+            <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #EA580C;">
+                Intelligent Mood Listening
+            </span>
+            <h1 class="editorial-title">Sangeet</h1>
+            <p class="editorial-sub">
+                Music that understands how you feel. Take a glance at your camera and let your mood curate the soundtrack.
             </p>
         </div>
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <span class="mood-tag">✨ 468 Face Landmarks</span>
-            <span class="mood-tag">🖐️ Dual Hand Gestures</span>
-            <span class="mood-tag">⚡ Live Telemetry</span>
+        <div style="color: #64748B; font-size: 0.88rem; background: #FFFFFF; border: 1px solid #EAE6DF; border-radius: 12px; padding: 8px 16px;">
+            ✨ Powered by facial landmark reading & deep learning
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Fetch latest state
+# Fetch latest mood data
 telemetry = read_telemetry()
 current_emotion = telemetry.get("emotion", "")
 current_conf = telemetry.get("confidence", 0.0)
 current_top3 = telemetry.get("top3", [])
-mood_info = MOOD_MAP.get(current_emotion, {
-    "emoji": "🎧",
-    "title": "Awaiting Detection",
-    "hex": "#64748B",
-    "vibe": "Look at the camera and express an emotion or gesture to get music matched to your mood.",
-    "tags": ["#MusicPlayer", "#Explore", "#Personalized"]
+
+mood_data = MOOD_CATALOGUE.get(current_emotion, {
+    "emoji": "🎵",
+    "title": "Awaiting Your Expression",
+    "subtitle": "Look into the camera to begin",
+    "blurb": "Position your face in the camera frame. Whether you're feeling joyful, calm, or energetic, we'll recommend songs that fit your exact state of mind.",
+    "badge_bg": "#F1F5F9",
+    "badge_color": "#475569",
+    "accent": "#EA580C",
+    "genres": ["Acoustic", "Pop", "Indie", "Lo-Fi", "Rock"],
+    "tempo": "Tailored to your mood"
 })
 
-# -------------------------------------------------------------
-# MAIN DASHBOARD: 2-COLUMN LAYOUT
-# -------------------------------------------------------------
-col_cam, col_ctrl = st.columns([1.15, 1], gap="medium")
 
-# LEFT COLUMN: Live Camera & Vision Telemetry
-with col_cam:
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.subheader("📹 Live Camera Feed & AI Telemetry")
-    st.caption("Allow camera access. The AI models analyze your facial landmarks and gestures in real time.")
+# -------------------------------------------------------------
+# MAIN 2-COLUMN EDITORIAL LAYOUT
+# -------------------------------------------------------------
+left_col, right_col = st.columns([1.1, 1], gap="large")
+
+# LEFT: Camera Stream & Expression Breakdown
+with left_col:
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<div class="card-label">Live Camera Mirror</div>', unsafe_allow_html=True)
+    st.caption("Allow camera access below. The camera detects your natural expressions and hand gestures in real time.")
 
     RTC_CONFIGURATION = RTCConfiguration({"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]})
 
     webrtc_streamer(
-        key="emotion-studio-streamer",
+        key="editorial-camera",
         desired_playing_state=True,
         rtc_configuration=RTC_CONFIGURATION,
         video_processor_factory=EmotionDetector
     )
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Live Probabilities Breakdown Card
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("#### 📊 Model Probability Distribution")
+    # Expression Breakdown Card
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<div class="card-label">Expression Breakdown</div>', unsafe_allow_html=True)
+
     if current_top3:
-        for emo_name, emo_pct in current_top3:
-            emo_meta = MOOD_MAP.get(emo_name, {"emoji": "🎵", "hex": "#8B5CF6"})
-            c1, c2, c3 = st.columns([1, 4, 1])
-            with c1:
-                st.write(f"{emo_meta['emoji']} **{emo_name.title()}**")
-            with c2:
-                st.progress(min(1.0, max(0.0, emo_pct / 100.0)))
-            with c3:
-                st.write(f"**{emo_pct}%**")
+        for emo_code, pct in current_top3:
+            info = MOOD_CATALOGUE.get(emo_code, {"emoji": "🎵", "title": emo_code.title()})
+            c_name, c_bar, c_val = st.columns([2.5, 4.5, 1])
+            with c_name:
+                st.write(f"{info['emoji']} **{info['title']}**")
+            with c_bar:
+                st.progress(min(1.0, max(0.0, pct / 100.0)))
+            with c_val:
+                st.write(f"{pct:.0f}%")
     else:
-        st.info("💡 Turn on your camera to see live probability distributions here.")
+        st.markdown("""
+        <p style="color: #64748B; font-size: 0.95rem; margin: 0;">
+            Turn on the camera above. Your expression analysis will update automatically.
+        </p>
+        """, unsafe_allow_html=True)
+
+    st.caption("Tip: Try smiling naturally, raising your eyebrows, or giving a thumbs up 👍 or rock sign 🤘!")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# RIGHT COLUMN: Music Recommender Controls & Mood Studio
-with col_ctrl:
-    # Detected Mood Card
-    border_color = mood_info.get("hex", "#8B5CF6")
+# RIGHT: Editorial Soundtrack & Recommendations
+with right_col:
+    # Editorial Mood Hero Card
+    accent_color = mood_data.get("accent", "#EA580C")
     st.markdown(f"""
-    <div class="mood-card" style="border: 1.5px solid {border_color};">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: #94A3B8; font-weight: 600;">Current Vibe</span>
-            <span style="background: {border_color}22; color: {border_color}; border: 1px solid {border_color}55; border-radius: 12px; padding: 2px 10px; font-size: 0.85rem; font-weight: 600;">
-                Confidence: {current_conf:.1f}%
+    <div class="mood-hero-card" style="border-left: 5px solid {accent_color};">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <span style="background: {mood_data['badge_bg']}; color: {mood_data['badge_color']}; font-size: 0.8rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;">
+                Detected Mood • {current_conf:.0f}% Match
             </span>
+            <span style="font-size: 0.85rem; color: #64748B;">{mood_data['tempo']}</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 16px; margin: 16px 0;">
-            <div style="font-size: 3.2rem; line-height: 1;">{mood_info['emoji']}</div>
+        
+        <div style="display: flex; align-items: flex-start; gap: 18px; margin: 15px 0;">
+            <div style="font-size: 3.4rem; line-height: 1; padding-top: 4px;">{mood_data['emoji']}</div>
             <div>
-                <h2 style="margin: 0; font-size: 1.8rem; font-weight: 700; color: #FFFFFF;">{mood_info['title']}</h2>
-                <p style="margin: 4px 0 0 0; color: #94A3B8; font-size: 0.95rem;">{mood_info['vibe']}</p>
+                <h2 style="margin: 0; font-size: 1.7rem; font-weight: 700; color: #0F172A; letter-spacing: -0.01em;">
+                    {mood_data['title']}
+                </h2>
+                <div style="color: {accent_color}; font-weight: 600; font-size: 0.92rem; margin-top: 2px;">
+                    {mood_data['subtitle']}
+                </div>
+                <p style="margin: 8px 0 0 0; color: #475569; font-size: 0.94rem; line-height: 1.55;">
+                    {mood_data['blurb']}
+                </p>
             </div>
         </div>
-        <div style="margin-top: 12px;">
-            {" ".join([f'<span class="mood-tag">{tag}</span>' for tag in mood_info['tags']])}
+        
+        <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #F1F5F9;">
+            <div style="font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #94A3B8; margin-bottom: 6px;">
+                Recommended Genres & Styles
+            </div>
+            {" ".join([f'<span class="genre-chip">{g}</span>' for g in mood_data['genres']])}
         </div>
     </div>
     """, unsafe_allow_html=True)
 
-    # Preferences Box
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("#### 🎧 Music Preferences")
+    # Music Personalization Box
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<div class="card-label">Fine-tune Your Music</div>', unsafe_allow_html=True)
 
-    col_l, col_a = st.columns(2)
-    with col_l:
-        lang = st.text_input("Language / Region", value="Hindi")
-    with col_a:
-        artist = st.text_input("Favorite Artist", value="Arijit Singh")
+    p_col1, p_col2 = st.columns(2)
+    with p_col1:
+        lang = st.text_input("Language or Region", value="Hindi")
+    with p_col2:
+        artist = st.text_input("Preferred Artist", value="Arijit Singh")
 
-    # Quick Artist Chips
     st.caption("Quick Select Artists:")
-    chip_cols = st.columns(4)
-    artists_list = ["Arijit Singh", "Taylor Swift", "Diljit Dosanjh", "Coldplay"]
-    for i, a_name in enumerate(artists_list):
-        if chip_cols[i].button(a_name, key=f"chip_{i}", use_container_width=True):
-            artist = a_name
+    artist_chips = ["Arijit Singh", "Taylor Swift", "Diljit Dosanjh", "Coldplay"]
+    chip_row = st.columns(4)
+    for idx, name in enumerate(artist_chips):
+        if chip_row[idx].button(name, key=f"art_{idx}", use_container_width=True):
+            artist = name
             st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Action Hub
-    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-    st.markdown("#### 🚀 Get Recommendations")
+    st.markdown('<div class="clean-card">', unsafe_allow_html=True)
+    st.markdown('<div class="card-label">Listen & Explore</div>', unsafe_allow_html=True)
 
-    # Generate tailored search query
-    query_mood = current_emotion if current_emotion else "feel good"
-    search_query = f"{lang} {query_mood} songs {artist}".strip()
-    yt_url = f"https://www.youtube.com/results?search_query={search_query.replace(' ', '+')}"
+    # Search Query Construction
+    mood_keyword = current_emotion if current_emotion else "peaceful melody"
+    search_query = f"{lang} {mood_keyword} songs {artist}".strip()
+    youtube_url = f"https://www.youtube.com/results?search_query={search_query.replace(' ', '+')}"
     spotify_url = f"https://open.spotify.com/search/{search_query.replace(' ', '%20')}"
 
-    c_btn1, c_btn2 = st.columns([2, 1])
-    with c_btn1:
-        rec_clicked = st.button("🎵 Recommend Music Now", use_container_width=True)
-    with c_btn2:
-        if st.button("🔄 Reset Mood", use_container_width=True):
+    btn_col1, btn_col2 = st.columns([2, 1])
+    with btn_col1:
+        recommend_clicked = st.button("🎵 Curate Songs for My Mood", use_container_width=True, type="primary")
+    with btn_col2:
+        if st.button("Reset Mood", use_container_width=True):
             np.save("detected_emotion.npy", np.array([""]))
             if os.path.exists("detected_state.json"):
                 os.remove("detected_state.json")
             st.rerun()
 
-    if rec_clicked:
+    if recommend_clicked:
         if not current_emotion:
-            st.warning("⚠️ Please look into the camera to capture your mood first!")
+            st.warning("Please look at the camera for a moment to let us sense your mood first!")
         else:
             try:
-                webbrowser.open(yt_url)
+                webbrowser.open(youtube_url)
             except Exception:
                 pass
-            st.success(f"🎉 Curated recommendations ready for **{mood_info['title']}**!")
+            st.success(f"Soundtrack curated for **{mood_data['title']}**! Choose your player below:")
 
-    # Direct launch buttons
-    st.markdown("<div style='margin-top: 15px;'>", unsafe_allow_html=True)
-    link_col1, link_col2 = st.columns(2)
-    with link_col1:
-        st.link_button("▶️ Open in YouTube", yt_url, use_container_width=True)
-    with link_col2:
-        st.link_button("🟢 Open in Spotify", spotify_url, use_container_width=True)
+    st.markdown("<div style='margin-top: 14px;'>", unsafe_allow_html=True)
+    l_c1, l_c2 = st.columns(2)
+    with l_c1:
+        st.link_button("▶️ Open on YouTube", youtube_url, use_container_width=True)
+    with l_c2:
+        st.link_button("🟢 Open on Spotify", spotify_url, use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.write("---")
-st.markdown(
-    "<div style='text-align: center; color: #64748B; font-size: 0.85rem; padding: 10px;'>"
-    "Sangeet AI • Powered by MediaPipe 468-Point Mesh, Keras Deep Learning & Streamlit"
-    "</div>",
-    unsafe_allow_html=True
-)
+# Footer
+st.markdown("""
+<div style="text-align: center; color: #94A3B8; font-size: 0.85rem; padding: 25px 0 15px 0;">
+    Sangeet • An emotional listening experience powered by MediaPipe & Deep Learning
+</div>
+""", unsafe_allow_html=True)
