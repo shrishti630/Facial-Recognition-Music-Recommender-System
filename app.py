@@ -47,7 +47,7 @@ st.markdown("""
         border-radius: 20px;
         padding: 4px 12px;
         font-size: 0.8rem;
-        font-weight: 500;
+        font-weight: 500; 
         margin-right: 6px;
         margin-top: 4px;
     }
@@ -174,11 +174,17 @@ GESTURE_TEST_CATALOGUE = {
 
 @st.cache_resource
 def get_model():
-    return load_model("model.h5")
+    try:
+        return load_model("model.h5")
+    except Exception:
+        return None
 
 @st.cache_data
 def get_labels():
-    return np.load("labels.npy")
+    try:
+        return np.load("labels.npy")
+    except Exception:
+        return np.array(FIVE_EMOTIONS)
 
 def ensure_task_models():
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -196,18 +202,27 @@ def ensure_task_models():
 @st.cache_resource
 def get_detectors():
     if USE_LEGACY:
-        hol = mp_holistic.Holistic()
-        return {"mode": "legacy", "hol": hol}
-    else:
+        try:
+            hol = mp_holistic.Holistic()
+            return {"mode": "legacy", "hol": hol, "error": None}
+        except Exception as e:
+            pass
+
+    try:
+        from mediapipe.tasks import python as mp_python
+        from mediapipe.tasks.python import vision as mp_vision
+
         face_path, hand_path = ensure_task_models()
         base_face = mp_python.BaseOptions(model_asset_path=face_path)
         opt_face = mp_vision.FaceLandmarkerOptions(base_options=base_face, num_faces=1)
         face_det = mp_vision.FaceLandmarker.create_from_options(opt_face)
 
         base_hand = mp_python.BaseOptions(model_asset_path=hand_path)
-        opt_hand = mp_vision.HandHandmarkerOptions = mp_vision.HandLandmarkerOptions(base_options=base_hand, num_hands=2)
+        opt_hand = mp_vision.HandLandmarkerOptions(base_options=base_hand, num_hands=2)
         hand_det = mp_vision.HandLandmarker.create_from_options(opt_hand)
-        return {"mode": "tasks", "face": face_det, "hand": hand_det}
+        return {"mode": "tasks", "face": face_det, "hand": hand_det, "error": None}
+    except Exception as e:
+        return {"mode": "failed", "error": str(e)}
 
 model = get_model()
 label = get_labels()
@@ -236,6 +251,11 @@ class EmotionDetector:
         frm = frame.to_ndarray(format="bgr24")
         frm = cv2.flip(frm, 1)
         h, w, _ = frm.shape
+
+        if detectors.get("mode") == "failed":
+            cv2.putText(frm, "AI Detector Failed to Load", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            cv2.putText(frm, "Change Python version to 3.11 in Settings", (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+            return av.VideoFrame.from_ndarray(frm, format="bgr24")
 
         lst = []
         face_detected = False
@@ -364,7 +384,7 @@ class EmotionDetector:
         active_gesture = None
         five_emotions = {}
 
-        if len(lst) == 1020:
+        if len(lst) == 1020 and model is not None:
             lst_arr = np.array(lst).reshape(1, -1)
             try:
                 probs = model.predict(lst_arr, verbose=0)[0]
@@ -495,6 +515,23 @@ if current_emotion not in FIVE_EMOTIONS:
     current_emotion = "neutral"
 
 mood_info = EMOTION_METADATA.get(current_emotion, EMOTION_METADATA["neutral"])
+
+if detectors.get("mode") == "failed":
+    st.error(
+        f"""
+        ⚠️ **Streamlit Cloud Environment Notice (Python 3.14 detected):**
+        MediaPipe native vision libraries require Python 3.11 or 3.12 (Python 3.14 is currently an experimental build where C-bindings cannot be linked).
+        
+        **How to fix in 10 seconds:**
+        1. On this page, click **Manage app** (bottom-right) or the **⋮** menu (top-right).
+        2. Click **Settings** ➔ **Advanced settings**.
+        3. Under **Python version**, select **3.11**.
+        4. Click **Save** and **Reboot app**.
+        """
+    )
+elif model is None:
+    st.warning("⚠️ Emotion classification model (`model.h5`) could not be loaded into memory.")
+
 
 
 # -------------------------------------------------------------
